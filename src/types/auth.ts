@@ -14,3 +14,7 @@ export interface IUser extends Document {
   generateAccessToken(): string;
   generateRefreshToken(): string;
 }
+
+export interface MulterFiles {
+  avatar?: Express.Multer.File[];
+}

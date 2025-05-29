@@ -7,7 +7,6 @@ const userSchema = new Schema<IUser>(
   {
     avatar: {
       type: String,
-      required: true,
     },
     full_name: {
       type: String,
