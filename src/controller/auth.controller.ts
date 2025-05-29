@@ -143,4 +143,22 @@ const logout = asyncHandler(async (req: Request, res: Response) => {
     .json(new ApiResponse(200, {}, "User logged Out"));
 });
 
-export { login, logout, register };
+const profile = asyncHandler(async (req: Request, res: Response) => {
+  const userId = req.user?._id;
+
+  if (!userId) {
+    throw new ApiError(404, "User ID not found");
+  }
+
+  const user = await User.findById(userId);
+
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, "User data fetch successfully"));
+});
+
+export { login, logout, register, profile };
