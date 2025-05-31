@@ -10,9 +10,12 @@ export interface IUser extends Document {
   provider: string;
   refreshToken: string;
   isVerified: boolean;
+  resetPasswordToken: string;
+  resetPasswordExpire: Date;
   isPasswordCorrect(password: string): Promise<boolean>;
   generateAccessToken(): string;
   generateRefreshToken(): string;
+  generateResetPasswordToken(): string;
 }
 
 export interface MulterFiles {

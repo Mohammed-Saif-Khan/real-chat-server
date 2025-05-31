@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import { Request, Response } from "express";
 import { User } from "../models/auth.model";
 import { MulterFiles } from "../types/auth";
@@ -5,6 +6,7 @@ import { ApiError } from "../utils/ApiError";
 import { ApiResponse } from "../utils/ApiResponse";
 import { asyncHandler } from "../utils/asyncHandler";
 import { deleteFromCloudinary, uploadOnCloudinary } from "../utils/cloudnary";
+import { sendResetPasswordEmail } from "../utils/mail";
 
 const generateAccessAndRefereshTokens = async (userId: string) => {
   try {
@@ -236,4 +238,66 @@ const updateAvatar = asyncHandler(async (req: Request, res: Response) => {
     );
 });
 
-export { register, login, logout, profile, updateProfile, updateAvatar };
+const requestPasswordReset = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { email } = req.body;
+
+    if (!email) {
+      throw new ApiError(404, "Email is not found");
+    }
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      throw new ApiError(404, "No user found with this email");
+    }
+
+    const resetToken = user.generateResetPasswordToken();
+    await user.save();
+
+    const resetUrl = `http://localhost:3000/reset-password/${resetToken}`;
+
+    await sendResetPasswordEmail(user.email, resetUrl);
+
+    return res
+      .status(200)
+      .json(new ApiResponse(200, "Reset link sent to your email"));
+  }
+);
+
+const resetPassword = asyncHandler(async (req: Request, res: Response) => {
+  const { token } = req.params;
+  const { password } = req.body;
+
+  const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+
+  const user = await User.findOne({
+    resetPasswordToken: hashedToken,
+    resetPasswordExpire: { $gt: new Date() },
+  });
+
+  if (!user) {
+    throw new ApiError(400, "Token is invalid or has expired");
+  }
+
+  user.password = password;
+  user.resetPasswordToken = undefined;
+  user.resetPasswordExpire = undefined;
+
+  await user.save();
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, "Password has been reset successfully"));
+});
+
+export {
+  login,
+  logout,
+  profile,
+  register,
+  requestPasswordReset,
+  updateAvatar,
+  updateProfile,
+  resetPassword,
+};

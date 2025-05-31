@@ -4,6 +4,8 @@ import {
   logout,
   profile,
   register,
+  requestPasswordReset,
+  resetPassword,
   updateAvatar,
   updateProfile,
 } from "../controller/auth.controller";
@@ -17,6 +19,10 @@ router.route("/login").post(login);
 router.route("/logout").post(verifyJWT, logout);
 router.route("/profile").post(verifyJWT, profile);
 router.route("/profile").put(verifyJWT, updateProfile);
-router.route("/profile/avatar").put(verifyJWT, updateAvatar);
+router
+  .route("/profile/avatar")
+  .put(upload.single("avatar"), verifyJWT, updateAvatar);
+router.route("/reset-password-request").post(requestPasswordReset);
+router.route("/reset-password/:token").post(resetPassword);
 
 export default router;
