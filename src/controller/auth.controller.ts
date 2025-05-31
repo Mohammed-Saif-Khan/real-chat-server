@@ -4,7 +4,7 @@ import { MulterFiles } from "../types/auth";
 import { ApiError } from "../utils/ApiError";
 import { ApiResponse } from "../utils/ApiResponse";
 import { asyncHandler } from "../utils/asyncHandler";
-import { uploadOnCloudinary } from "../utils/cloudnary";
+import { deleteFromCloudinary, uploadOnCloudinary } from "../utils/cloudnary";
 
 const generateAccessAndRefereshTokens = async (userId: string) => {
   try {
@@ -161,4 +161,79 @@ const profile = asyncHandler(async (req: Request, res: Response) => {
     .json(new ApiResponse(200, "User data fetch successfully"));
 });
 
-export { login, logout, register, profile };
+const updateProfile = asyncHandler(async (req: Request, res: Response) => {
+  const { full_name, email, bio, country } = req.body;
+  const userId = req.user._id;
+
+  if ([full_name, email, country, bio].some((field) => field?.trim() === "")) {
+    throw new ApiError(400, "All fields are required");
+  }
+
+  const user = await User.findByIdAndUpdate(
+    userId,
+    {
+      $set: {
+        full_name,
+        email,
+        country,
+        bio,
+      },
+    },
+    { new: true }
+  ).select("-password");
+
+  if (!user) {
+    throw new ApiError(500, "Something went wrong while updating profile");
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, "User Updated Successfully"));
+});
+
+const updateAvatar = asyncHandler(async (req: Request, res: Response) => {
+  const userId = req.user?._id;
+  const avatarLocalPath = req.file?.path;
+
+  if (!userId) {
+    throw new ApiError(404, "User ID is not found");
+  }
+
+  if (!avatarLocalPath) {
+    throw new ApiError(400, "Avatar file is missing");
+  }
+
+  const existingUser = await User.findById(userId);
+  if (!existingUser) {
+    throw new ApiError(404, "User not found");
+  }
+
+  if (existingUser.avatar) {
+    await deleteFromCloudinary(existingUser.avatar);
+  }
+
+  const upload = await uploadOnCloudinary(avatarLocalPath);
+  const avatarUrl = upload?.url;
+
+  if (!avatarUrl) {
+    throw new ApiError(500, "Failed to upload avatar to Cloudinary");
+  }
+
+  const updatedProfile = await User.findByIdAndUpdate(
+    userId,
+    { $set: { avatar: avatarUrl } },
+    { new: true }
+  ).select("-password");
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        { data: updatedProfile },
+        "Avatar updated successfully"
+      )
+    );
+});
+
+export { register, login, logout, profile, updateProfile, updateAvatar };
