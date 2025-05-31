@@ -292,12 +292,12 @@ const resetPassword = asyncHandler(async (req: Request, res: Response) => {
 });
 
 export {
+  register,
   login,
   logout,
   profile,
-  register,
-  requestPasswordReset,
   updateAvatar,
   updateProfile,
+  requestPasswordReset,
   resetPassword,
 };
