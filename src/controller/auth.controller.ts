@@ -291,6 +291,38 @@ const resetPassword = asyncHandler(async (req: Request, res: Response) => {
     .json(new ApiResponse(200, "Password has been reset successfully"));
 });
 
+const updatePassword = asyncHandler(async (req: Request, res: Response) => {
+  const { oldPassword, newPassword } = req.body;
+  const userId = req.user?._id;
+
+  if ([oldPassword, newPassword].some((field) => field?.trim() === "")) {
+    throw new ApiError(400, "All field is required");
+  }
+
+  if (!userId) {
+    throw new ApiError(404, "User ID not found");
+  }
+
+  const user = await User.findById(userId);
+
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  const isPasswordValid = await user.isPasswordCorrect(newPassword);
+
+  if (!isPasswordValid) {
+    throw new ApiError(400, "Old password is incorrect");
+  }
+
+  user.password = newPassword;
+  await user.save();
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, "Password updated successfully"));
+});
+
 export {
   register,
   login,
@@ -300,4 +332,5 @@ export {
   updateProfile,
   requestPasswordReset,
   resetPassword,
+  updatePassword,
 };
