@@ -1,7 +1,6 @@
 import crypto from "crypto";
 import { Request, Response } from "express";
 import { User } from "../models/auth.model";
-import { MulterFiles } from "../types/auth";
 import { ApiError } from "../utils/ApiError";
 import { ApiResponse } from "../utils/ApiResponse";
 import { asyncHandler } from "../utils/asyncHandler";
@@ -41,15 +40,15 @@ const register = asyncHandler(async (req: Request, res: Response) => {
     throw new ApiError(409, "User already exists");
   }
 
-  const file = req.files as MulterFiles;
-  const avatarLocalPath = file.avatar?.[0]?.path;
+  const file = req.file;
+  const avatarLocalPath = file?.path;
 
   const avatar = avatarLocalPath
     ? await uploadOnCloudinary(avatarLocalPath, "real-chat/profile")
     : null;
 
   const user = await User.create({
-    avatar: avatar?.url,
+    avatar: avatar?.url || undefined,
     full_name,
     email,
     bio,
@@ -324,13 +323,13 @@ const updatePassword = asyncHandler(async (req: Request, res: Response) => {
 });
 
 export {
-  register,
   login,
   logout,
   profile,
-  updateAvatar,
-  updateProfile,
+  register,
   requestPasswordReset,
   resetPassword,
+  updateAvatar,
   updatePassword,
+  updateProfile,
 };

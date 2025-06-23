@@ -8,6 +8,7 @@ const userSchema = new Schema<IUser>(
   {
     avatar: {
       type: String,
+      required: false,
     },
     full_name: {
       type: String,
@@ -27,7 +28,9 @@ const userSchema = new Schema<IUser>(
     },
     password: {
       type: String,
-      required: true,
+      required: function () {
+        return this.provider === "local";
+      },
     },
     provider: {
       type: String,

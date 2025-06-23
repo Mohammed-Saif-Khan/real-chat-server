@@ -41,6 +41,7 @@
     "multer": "^2.0.0",
     "nodemailer": "^7.0.3",
     "prettier": "^3.5.3",
+    "serverless-http": "^3.2.0",
     "ts-node": "^10.9.2",
     "tsc": "^2.0.4"
   }
