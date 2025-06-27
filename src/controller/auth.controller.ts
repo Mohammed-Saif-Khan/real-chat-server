@@ -26,29 +26,44 @@ const generateAccessAndRefereshTokens = async (userId: string) => {
 };
 
 const register = asyncHandler(async (req: Request, res: Response) => {
-  const { full_name, email, bio, country, password } = req.body;
+  const {
+    full_name,
+    email,
+    bio,
+    country,
+    password,
+    avatar: avatarFromBody,
+  } = req.body;
 
   if (
     [full_name, email, country, password].some((field) => field?.trim() === "")
   ) {
-    throw new ApiError(400, "All fields are required");
+    return res.status(400).json({ message: "All fields are required" });
   }
 
   const existedUser = await User.findOne({ email });
 
   if (existedUser) {
-    throw new ApiError(409, "User already exists");
+    return res.status(409).json({ message: "User already exists" });
   }
 
   const file = req.file;
   const avatarLocalPath = file?.path;
 
-  const avatar = avatarLocalPath
-    ? await uploadOnCloudinary(avatarLocalPath, "real-chat/profile")
-    : null;
+  let avatar: string | undefined;
+
+  if (avatarLocalPath) {
+    const uploadedAvatar = await uploadOnCloudinary(
+      avatarLocalPath,
+      "real-chat/profile"
+    );
+    avatar = uploadedAvatar?.url;
+  } else if (avatarFromBody && typeof avatarFromBody === "string") {
+    avatar = avatarFromBody;
+  }
 
   const user = await User.create({
-    avatar: avatar?.url || undefined,
+    avatar,
     full_name,
     email,
     bio,
@@ -260,7 +275,7 @@ const requestPasswordReset = asyncHandler(
 
     return res
       .status(200)
-      .json(new ApiResponse(200, "Reset link sent to your email"));
+      .json(new ApiResponse(200, {}, "Reset link sent to your email"));
   }
 );
 
