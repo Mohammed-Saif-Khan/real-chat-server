@@ -269,7 +269,7 @@ const requestPasswordReset = asyncHandler(
     const resetToken = user.generateResetPasswordToken();
     await user.save();
 
-    const resetUrl = `http://localhost:3000/reset-password/${resetToken}`;
+    const resetUrl = `http://localhost:3000/reset-password?token=${resetToken}`;
 
     await sendResetPasswordEmail(user.email, resetUrl);
 
@@ -302,7 +302,7 @@ const resetPassword = asyncHandler(async (req: Request, res: Response) => {
 
   return res
     .status(200)
-    .json(new ApiResponse(200, "Password has been reset successfully"));
+    .json(new ApiResponse(200, {}, "Password reset successfully"));
 });
 
 const updatePassword = asyncHandler(async (req: Request, res: Response) => {
@@ -334,7 +334,7 @@ const updatePassword = asyncHandler(async (req: Request, res: Response) => {
 
   return res
     .status(200)
-    .json(new ApiResponse(200, "Password updated successfully"));
+    .json(new ApiResponse(200, {}, "Password updated successfully"));
 });
 
 export {
