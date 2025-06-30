@@ -166,7 +166,7 @@ const profile = asyncHandler(async (req: Request, res: Response) => {
     throw new ApiError(404, "User ID not found");
   }
 
-  const user = await User.findById(userId);
+  const user = await User.findById(userId).select("-password -refreshToken");
 
   if (!user) {
     throw new ApiError(404, "User not found");
@@ -174,7 +174,7 @@ const profile = asyncHandler(async (req: Request, res: Response) => {
 
   return res
     .status(200)
-    .json(new ApiResponse(200, "User data fetch successfully"));
+    .json(new ApiResponse(200, user, "User data fetch successfully"));
 });
 
 const updateProfile = asyncHandler(async (req: Request, res: Response) => {
@@ -337,6 +337,16 @@ const updatePassword = asyncHandler(async (req: Request, res: Response) => {
     .json(new ApiResponse(200, {}, "Password updated successfully"));
 });
 
+const allUser = asyncHandler(async (req: Request, res: Response) => {
+  const user = await User.find();
+
+  if (!user) {
+    throw new ApiError(404, "No user found");
+  }
+
+  return res.status(200).json(new ApiResponse(200, user, "User fetched"));
+});
+
 export {
   login,
   logout,
@@ -347,4 +357,5 @@ export {
   updateAvatar,
   updatePassword,
   updateProfile,
+  allUser,
 };

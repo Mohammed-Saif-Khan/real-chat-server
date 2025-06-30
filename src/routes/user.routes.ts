@@ -1,5 +1,6 @@
 import { Router } from "express";
 import {
+  allUser,
   login,
   logout,
   profile,
@@ -18,7 +19,7 @@ const router = Router();
 router.route("/signup").post(upload.single("avatar"), register);
 router.route("/login").post(login);
 router.route("/logout").post(verifyJWT, logout);
-router.route("/profile").post(verifyJWT, profile);
+router.route("/profile").get(verifyJWT, profile);
 router.route("/profile").put(verifyJWT, updateProfile);
 router
   .route("/profile/avatar")
@@ -26,5 +27,6 @@ router
 router.route("/reset-password-request").post(requestPasswordReset);
 router.route("/reset-password/:token").post(resetPassword);
 router.route("/update-password").post(verifyJWT, updatePassword);
+router.route("/all").post(verifyJWT, allUser);
 
 export default router;
