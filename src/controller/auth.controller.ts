@@ -338,7 +338,9 @@ const updatePassword = asyncHandler(async (req: Request, res: Response) => {
 });
 
 const allUser = asyncHandler(async (req: Request, res: Response) => {
-  const user = await User.find().select("-password -refreshToken");
+  const user = await User.find({ _id: { $ne: req.user._id } }).select(
+    "-password -refreshToken -bio -provider -email"
+  );
 
   if (!user) {
     throw new ApiError(404, "No user found");
