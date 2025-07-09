@@ -27,6 +27,6 @@ router
 router.route("/reset-password-request").post(requestPasswordReset);
 router.route("/reset-password/:token").post(resetPassword);
 router.route("/update-password").post(verifyJWT, updatePassword);
-router.route("/all").post(verifyJWT, allUser);
+router.route("/all").get(verifyJWT, allUser);
 
 export default router;
