@@ -75,7 +75,9 @@ const getPendingRequests = asyncHandler(async (req: Request, res: Response) => {
   const request = await Friend.find({
     receiver: userId,
     status: "pending",
-  }).populate("send", "avatar full_name country");
+  }).populate("sender", "avatar full_name country");
+
+  console.log(request, "requestrequest");
 
   if (!request) {
     throw new ApiError(404, "Request not found");
