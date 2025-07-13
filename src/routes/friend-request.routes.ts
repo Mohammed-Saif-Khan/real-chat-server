@@ -6,8 +6,11 @@ import {
   rejectFriendRequest,
   sendFriendRequest,
 } from "../controller/friend-request.controller";
+import { verifyJWT } from "../middleware/auth.middleware";
 
 const router = Router();
+
+router.use(verifyJWT);
 
 router.route("/send").post(sendFriendRequest);
 router.route("/accept/:id").post(acceptFriendRequest);

@@ -8,6 +8,9 @@ const sendFriendRequest = asyncHandler(async (req: Request, res: Response) => {
   const { receiverId } = req.body;
   const senderId = req.user?._id;
 
+  console.log(receiverId, "receiverId");
+  console.log(senderId, "senderIdsenderId");
+
   if (senderId === receiverId) {
     return res.json(new ApiError(400, "You can't add yourself"));
   }

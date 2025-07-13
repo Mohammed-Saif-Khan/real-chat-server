@@ -4,20 +4,20 @@ interface ErrorDetail {
 }
 
 class ApiError extends Error {
-  statusCode: number;
+  status: number;
   data: null;
   success: false;
   errors: ErrorDetail[];
 
   constructor(
-    statusCode: number,
+    status: number,
     message: string = "Something went wrong",
     errors: ErrorDetail[] = [],
     stack: string = ""
   ) {
     super(message);
 
-    this.statusCode = statusCode;
+    this.status = status;
     this.data = null;
     this.success = false;
     this.errors = errors;
