@@ -338,15 +338,74 @@ const updatePassword = asyncHandler(async (req: Request, res: Response) => {
 });
 
 const allUser = asyncHandler(async (req: Request, res: Response) => {
-  const user = await User.find({ _id: { $ne: req.user._id } }).select(
-    "-password -refreshToken -bio -provider -email"
-  );
+  const users = await User.aggregate([
+    {
+      $match: {
+        _id: { $ne: req.user._id },
+      },
+    },
+    {
+      $lookup: {
+        from: "friendrequests", // the collection name, must be lowercase and plural
+        let: { otherUserId: "$_id" },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $or: [
+                  {
+                    $and: [
+                      { $eq: ["$sender", "$$otherUserId"] },
+                      {
+                        $eq: ["$receiver", req.user._id],
+                      },
+                    ],
+                  },
+                  {
+                    $and: [
+                      { $eq: ["$receiver", "$$otherUserId"] },
+                      {
+                        $eq: ["$sender", req.user._id],
+                      },
+                    ],
+                  },
+                ],
+              },
+            },
+          },
+          { $sort: { createdAt: -1 } }, // latest request first
+          { $limit: 1 }, // only one request between two users
+        ],
+        as: "friendRequest",
+      },
+    },
+    {
+      $addFields: {
+        friendRequestStatus: {
+          $cond: {
+            if: { $gt: [{ $size: "$friendRequest" }, 0] },
+            then: { $arrayElemAt: ["$friendRequest.status", 0] },
+            else: null,
+          },
+        },
+      },
+    },
+    {
+      $project: {
+        fullName: 1,
+        username: 1,
+        avatar: 1,
+        coverImage: 1,
+        friendRequestStatus: 1,
+      },
+    },
+  ]);
 
-  if (!user) {
+  if (!users.length) {
     throw new ApiError(404, "No user found");
   }
 
-  return res.status(200).json(new ApiResponse(200, user, "User fetched"));
+  return res.status(200).json(new ApiResponse(200, users, "User fetched"));
 });
 
 export {
