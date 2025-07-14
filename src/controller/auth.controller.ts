@@ -338,14 +338,61 @@ const updatePassword = asyncHandler(async (req: Request, res: Response) => {
 });
 
 const allUser = asyncHandler(async (req: Request, res: Response) => {
-  const user = await User.find({ _id: { $ne: req.user._id } }).select(
-    "-password -refreshToken -bio -provider -email"
-  );
-
-  if (!user) {
-    throw new ApiError(404, "No user found");
-  }
-
+  const user = await User.aggregate([
+    {
+      $match: {
+        _id: { $ne: req.user?._id }, //login user not include
+      },
+    },
+    {
+      $lookup: {
+        from: "friendrequests",
+        let: { receiverId: "$_id" },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  { $eq: ["$sender", req.user._id] },
+                  { $eq: ["$receiver", "$$receiverId"] },
+                  { $in: ["$status", ["pending", "accepted"]] },
+                ],
+              },
+            },
+          },
+        ],
+        as: "friendRequestData",
+      },
+    },
+    {
+      $addFields: {
+        friendRequestStatus: {
+          $cond: [
+            { $gt: [{ $size: "$friendRequestData" }, 0] },
+            { $arrayElemAt: ["$friendRequestData.status", 0] },
+            null,
+          ],
+        },
+        friendRequestId: {
+          $cond: [
+            { $gt: [{ $size: "$friendRequestData" }, 0] },
+            { $arrayElemAt: ["$friendRequestData._id", 0] },
+            null,
+          ],
+        },
+      },
+    },
+    {
+      $project: {
+        password: 0,
+        refreshToken: 0,
+        bio: 0,
+        provider: 0,
+        email: 0,
+        friendRequestData: 0, // remove raw lookup array
+      },
+    },
+  ]);
   return res.status(200).json(new ApiResponse(200, user, "User fetched"));
 });
 
