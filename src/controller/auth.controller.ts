@@ -363,14 +363,14 @@ const allUser = asyncHandler(async (req: Request, res: Response) => {
     if (request) {
       if (request.status === "pending") {
         if (request.sender.toString() === loginUser.toString()) {
-          status = "request_sent";
+          status = "request_sent"; // aapne bheja
         } else {
-          status = "request_received";
+          status = "request_received"; // aapko aayi
         }
       } else if (request.status === "accepted") {
-        status = "friends";
+        status = "accepted";
       } else if (request.status === "rejected") {
-        status = "none";
+        status = "rejected";
       }
     }
 
