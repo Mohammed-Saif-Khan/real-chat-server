@@ -8,8 +8,10 @@ const sendFriendRequest = asyncHandler(async (req: Request, res: Response) => {
   const { receiverId } = req.body;
   const senderId = req.user?._id;
 
-  if (senderId === receiverId) {
-    return res.json(new ApiError(400, "You can't add yourself"));
+  if (!senderId || senderId === receiverId) {
+    return res
+      .status(400)
+      .json(new ApiError(400, "You can't send a request to yourself"));
   }
 
   const existing = await Friend.findOne({
@@ -18,14 +20,22 @@ const sendFriendRequest = asyncHandler(async (req: Request, res: Response) => {
     status: "pending",
   });
 
-  if (existing) return res.json(new ApiError(400, "Already sent."));
+  if (existing) {
+    await Friend.findByIdAndDelete(existing._id);
+    return res
+      .status(200)
+      .json(new ApiResponse(200, { status: null }, "Friend request cancelled"));
+  }
 
-  const request = await Friend.create({
+  await Friend.create({
     sender: senderId,
     receiver: receiverId,
+    status: "pending",
   });
 
-  return res.status(200).json(new ApiResponse(200, request, "Request Send"));
+  return res
+    .status(200)
+    .json(new ApiResponse(200, { status: "pending" }, "Friend request sent"));
 });
 
 const acceptFriendRequest = asyncHandler(
@@ -42,7 +52,9 @@ const acceptFriendRequest = asyncHandler(
     request.status = "accepted";
     await request.save();
 
-    return res.status(200).json(new ApiResponse(200, "Request Accept"));
+    return res
+      .status(200)
+      .json(new ApiResponse(200, { status: "accepted" }, "Request Accept"));
   }
 );
 

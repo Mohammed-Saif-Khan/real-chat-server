@@ -10,12 +10,12 @@ import { verifyJWT } from "../middleware/auth.middleware";
 
 const router = Router();
 
-router.use(verifyJWT);
+// router.use(verifyJWT);
 
-router.route("/send").post(sendFriendRequest);
+router.route("/send").post(verifyJWT, sendFriendRequest);
 router.route("/accept/:id").post(acceptFriendRequest);
 router.route("/reject/:id").post(rejectFriendRequest);
-router.route("/pending").get(getPendingRequests);
+router.route("/pending").get(verifyJWT, getPendingRequests);
 router.route("/aceepted").get(getAcceptedRequest);
 
 export default router;
