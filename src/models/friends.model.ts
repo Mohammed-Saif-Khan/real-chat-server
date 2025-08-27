@@ -1,7 +1,7 @@
 import mongoose, { Model, Schema } from "mongoose";
-import { IFriendRequest } from "../types/friend-request";
+import { IFriend } from "../types/friend-request";
 
-const friendRequestSchema = new Schema<IFriendRequest>(
+const friendSchema = new Schema<IFriend>(
   {
     sender: {
       type: Schema.Types.ObjectId,
@@ -22,7 +22,7 @@ const friendRequestSchema = new Schema<IFriendRequest>(
   { timestamps: true, versionKey: false }
 );
 
-export const Friend: Model<IFriendRequest> = mongoose.model<IFriendRequest>(
-  "FriendRequest",
-  friendRequestSchema
+export const Friend: Model<IFriend> = mongoose.model<IFriend>(
+  "Friend",
+  friendSchema
 );

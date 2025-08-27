@@ -6,6 +6,7 @@ import { ApiResponse } from "../utils/ApiResponse";
 import { asyncHandler } from "../utils/asyncHandler";
 import { deleteFromCloudinary, uploadOnCloudinary } from "../utils/cloudnary";
 import { sendResetPasswordEmail } from "../utils/mail";
+import { Friend } from "../models/friends.model";
 
 const generateAccessAndRefereshTokens = async (userId: string) => {
   try {
@@ -338,62 +339,52 @@ const updatePassword = asyncHandler(async (req: Request, res: Response) => {
 });
 
 const allUser = asyncHandler(async (req: Request, res: Response) => {
-  const user = await User.aggregate([
-    {
-      $match: {
-        _id: { $ne: req.user?._id }, //login user not include
-      },
-    },
-    {
-      $lookup: {
-        from: "friendrequests",
-        let: { receiverId: "$_id" },
-        pipeline: [
-          {
-            $match: {
-              $expr: {
-                $and: [
-                  { $eq: ["$sender", req.user._id] },
-                  { $eq: ["$receiver", "$$receiverId"] },
-                  { $in: ["$status", ["pending", "accepted"]] },
-                ],
-              },
-            },
-          },
-        ],
-        as: "friendRequestData",
-      },
-    },
-    {
-      $addFields: {
-        friendRequestStatus: {
-          $cond: [
-            { $gt: [{ $size: "$friendRequestData" }, 0] },
-            { $arrayElemAt: ["$friendRequestData.status", 0] },
-            null,
-          ],
-        },
-        friendRequestId: {
-          $cond: [
-            { $gt: [{ $size: "$friendRequestData" }, 0] },
-            { $arrayElemAt: ["$friendRequestData._id", 0] },
-            null,
-          ],
-        },
-      },
-    },
-    {
-      $project: {
-        password: 0,
-        refreshToken: 0,
-        bio: 0,
-        provider: 0,
-        email: 0,
-        friendRequestData: 0, // remove raw lookup array
-      },
-    },
-  ]);
-  return res.status(200).json(new ApiResponse(200, user, "User fetched"));
+  const loginUser = req.user?._id;
+
+  //get all user accept login user
+  const users = await User.find({ _id: { $ne: loginUser } });
+
+  //get all friend request in which user involve
+  const requests = await Friend.find({
+    $or: [{ sender: loginUser }, { receiver: loginUser }],
+  });
+
+  const userList = users.map((u) => {
+    let status = "none"; //default
+
+    const request = requests.find(
+      (r) =>
+        (r.sender.toString() === loginUser.toString() &&
+          r.receiver.toString() === u._id.toString()) ||
+        (r.receiver.toString() === loginUser.toString() &&
+          r.sender.toString() === u._id.toString())
+    );
+
+    if (request) {
+      if (request.status === "pending") {
+        if (request.sender.toString() === loginUser.toString()) {
+          status = "request_sent";
+        } else {
+          status = "request_received";
+        }
+      } else if (request.status === "accepted") {
+        status = "friends";
+      } else if (request.status === "rejected") {
+        status = "none";
+      }
+    }
+
+    return {
+      ...u.toObject(),
+      status,
+    };
+  });
+
+  return res.status(200).json({
+    success: true,
+    message: "All users fetched with friend status",
+    users: userList,
+  });
 });
 
 export {
