@@ -18,7 +18,9 @@ app.use(cookieParser());
 
 //import
 import userRouter from "./routes/user.routes";
+import friendsRouter from "./routes/friends.routes";
 
 app.use("/api/v1/users", userRouter);
+app.use("/api/v1", friendsRouter);
 
 export { app };
