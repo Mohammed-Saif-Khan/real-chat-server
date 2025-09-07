@@ -2,6 +2,9 @@ import { Request, Response } from "express";
 import { asyncHandler } from "../utils/asyncHandler";
 import { Friend } from "../models/friends.model";
 
+// -----------------------------
+// Send or Cancel Friend Request
+// -----------------------------
 export const sendRequest = asyncHandler(async (req: Request, res: Response) => {
   const senderUser = req.user._id;
   const { receiverId } = req.params;
@@ -12,6 +15,7 @@ export const sendRequest = asyncHandler(async (req: Request, res: Response) => {
       .json({ success: false, message: "Receiver Id not found" });
   }
 
+  // check if request already exists
   const existingRequest = await Friend.findOne({
     $or: [
       { sender: senderUser, receiver: receiverId },
@@ -20,11 +24,13 @@ export const sendRequest = asyncHandler(async (req: Request, res: Response) => {
   });
 
   if (existingRequest) {
+    // cancel request
     await Friend.findByIdAndDelete(existingRequest._id);
     return res
       .status(200)
-      .json({ success: true, message: "Request Cancelled" });
+      .json({ success: true, message: "Friend Request Cancelled" });
   } else {
+    // create new request
     await Friend.create({
       sender: senderUser,
       receiver: receiverId,
@@ -38,6 +44,9 @@ export const sendRequest = asyncHandler(async (req: Request, res: Response) => {
   }
 });
 
+// -----------------------------
+// Get All Pending Requests (for logged in user)
+// -----------------------------
 export const getPendingRequest = asyncHandler(
   async (req: Request, res: Response) => {
     const userId = req.user._id;
@@ -52,15 +61,18 @@ export const getPendingRequest = asyncHandler(
     return res.status(200).json({
       pendingRequest,
       success: true,
-      message: "Fetched All Pending Request",
+      message: "Fetched All Pending Requests",
     });
   }
 );
 
+// -----------------------------
+// Accept Friend Request
+// -----------------------------
 export const acceptRequest = asyncHandler(
   async (req: Request, res: Response) => {
     const userId = req.user._id;
-    const { requestId } = req.params;
+    const { requestId } = req.params; // this is Friend._id
 
     if (!requestId) {
       return res
@@ -91,10 +103,13 @@ export const acceptRequest = asyncHandler(
   }
 );
 
+// -----------------------------
+// Reject Friend Request
+// -----------------------------
 export const rejectRequest = asyncHandler(
   async (req: Request, res: Response) => {
     const userId = req.user._id;
-    const { requestId } = req.params;
+    const { requestId } = req.params; // this is Friend._id
 
     if (!requestId) {
       return res
@@ -125,6 +140,9 @@ export const rejectRequest = asyncHandler(
   }
 );
 
+// -----------------------------
+// Get All Friends
+// -----------------------------
 export const getFriends = asyncHandler(async (req: Request, res: Response) => {
   const userId = req.user._id;
 
@@ -140,7 +158,9 @@ export const getFriends = asyncHandler(async (req: Request, res: Response) => {
     return isSender ? f.receiver : f.sender;
   });
 
-  return res
-    .status(200)
-    .json({ friendList, success: true, message: "Fetched Friends" });
+  return res.status(200).json({
+    friendList,
+    success: true,
+    message: "Fetched Friends",
+  });
 });

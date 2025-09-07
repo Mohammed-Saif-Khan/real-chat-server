@@ -351,19 +351,19 @@ export const updatePassword = asyncHandler(
 export const allUser = asyncHandler(async (req: Request, res: Response) => {
   const loginUser = req.user?._id;
 
-  //get all user accept login user
+  // get all user except login user
   const users = await User.find({ _id: { $ne: loginUser } }).select(
     "-password -refreshToken -provider"
   );
 
-  //get all friend request in which user involve
+  // get all friend request in which user involve
   const requests = await Friend.find({
     $or: [{ sender: loginUser }, { receiver: loginUser }],
   });
 
   const userList = users.map((u) => {
-    let status = "none"; //default
-
+    let status = "none"; // default
+    let friend_id = null;
     const request = requests.find(
       (r) =>
         (r.sender.toString() === loginUser.toString() &&
@@ -373,6 +373,7 @@ export const allUser = asyncHandler(async (req: Request, res: Response) => {
     );
 
     if (request) {
+      friend_id = request?._id;
       if (request.status === "pending") {
         if (request.sender.toString() === loginUser.toString()) {
           status = "request_sent"; // aapne bheja
@@ -382,12 +383,13 @@ export const allUser = asyncHandler(async (req: Request, res: Response) => {
       } else if (request.status === "accepted") {
         status = "accepted";
       } else if (request.status === "rejected") {
-        status = "rejected";
+        return null; // ⬅️ reject hua to skip kar do
       }
     }
 
     return {
       ...u.toObject(),
+      friend_id,
       status,
     };
   });
