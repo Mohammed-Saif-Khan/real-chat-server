@@ -2,9 +2,6 @@ import { Request, Response } from "express";
 import { asyncHandler } from "../utils/asyncHandler";
 import { Friend } from "../models/friends.model";
 
-// -----------------------------
-// Send or Cancel Friend Request
-// -----------------------------
 export const sendRequest = asyncHandler(async (req: Request, res: Response) => {
   const senderUser = req.user._id;
   const { receiverId } = req.params;
@@ -44,9 +41,6 @@ export const sendRequest = asyncHandler(async (req: Request, res: Response) => {
   }
 });
 
-// -----------------------------
-// Get All Pending Requests (for logged in user)
-// -----------------------------
 export const getPendingRequest = asyncHandler(
   async (req: Request, res: Response) => {
     const userId = req.user._id;
@@ -66,9 +60,6 @@ export const getPendingRequest = asyncHandler(
   }
 );
 
-// -----------------------------
-// Accept Friend Request
-// -----------------------------
 export const acceptRequest = asyncHandler(
   async (req: Request, res: Response) => {
     const userId = req.user._id;
@@ -103,9 +94,6 @@ export const acceptRequest = asyncHandler(
   }
 );
 
-// -----------------------------
-// Reject Friend Request
-// -----------------------------
 export const rejectRequest = asyncHandler(
   async (req: Request, res: Response) => {
     const userId = req.user._id;
@@ -140,9 +128,6 @@ export const rejectRequest = asyncHandler(
   }
 );
 
-// -----------------------------
-// Get All Friends
-// -----------------------------
 export const getFriends = asyncHandler(async (req: Request, res: Response) => {
   const userId = req.user._id;
 

@@ -376,14 +376,14 @@ export const allUser = asyncHandler(async (req: Request, res: Response) => {
       friend_id = request?._id;
       if (request.status === "pending") {
         if (request.sender.toString() === loginUser.toString()) {
-          status = "request_sent"; // aapne bheja
+          status = "request_sent";
         } else {
-          status = "request_received"; // aapko aayi
+          status = "request_received";
         }
       } else if (request.status === "accepted") {
         status = "accepted";
       } else if (request.status === "rejected") {
-        return null; // ⬅️ reject hua to skip kar do
+        status = "none";
       }
     }
 
