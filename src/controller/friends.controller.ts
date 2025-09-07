@@ -22,19 +22,20 @@ export const sendRequest = asyncHandler(async (req: Request, res: Response) => {
 
   if (existingRequest) {
     // cancel request
-    await Friend.findByIdAndDelete(existingRequest._id);
+    const data = await Friend.findByIdAndDelete(existingRequest._id);
     return res
       .status(200)
-      .json({ success: true, message: "Friend Request Cancelled" });
+      .json({ data, success: true, message: "Friend Request Cancelled" });
   } else {
     // create new request
-    await Friend.create({
+    const data = await Friend.create({
       sender: senderUser,
       receiver: receiverId,
       status: "pending",
     });
 
     return res.status(200).json({
+      data,
       success: true,
       message: "Friend Request Sent Successfully",
     });
